@@ -15,6 +15,12 @@
 # production
 /build
 
+#/ENV
+.env
+
+#/mongo
+mongo/
+
 # misc
 .DS_Store
 *.pem
