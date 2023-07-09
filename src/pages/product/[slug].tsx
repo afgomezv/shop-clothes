@@ -1,26 +1,65 @@
+import { useContext, useState } from "react";
 import {
   GetServerSideProps,
   NextPage,
   GetStaticPaths,
   GetStaticProps,
 } from "next";
-import { Box, Button, Grid, Typography } from "@mui/material";
-import { ShopLayout } from "@/components/layouts";
-import { ProductSlideshow, SizeSelector } from "@/components/products";
-import { ItemCounter } from "@/components/ui";
-import { IProduct } from "@/interfaces";
+import { useRouter } from "next/router";
+import { Box, Button, Chip, Grid, Typography } from "@mui/material";
+import { CartContext } from "@/context";
 import { dbProducts } from "@/database";
-import { Product } from "@/models";
+import { ICartProduct, IProduct, ISize } from "@/interfaces";
+import { ItemCounter } from "@/components/ui";
+import { ProductSlideshow, SizeSelector } from "@/components/products";
+import { ShopLayout } from "@/components/layouts";
 
 interface Props {
   product: IProduct;
 }
 
 const ProductPage: NextPage<Props> = ({ product }) => {
-  // const router = useRouter();
+  const router = useRouter();
+  const { addProductToCart } = useContext(CartContext);
+
+  const [tempCartProduct, setTempCartProduct] = useState<ICartProduct>({
+    _id: product._id,
+    image: product.images[0],
+    price: product.price,
+    size: undefined,
+    slug: product.slug,
+    title: product.title,
+    gender: product.gender,
+    quantity: 1,
+  });
+
   // const { products: product, isLoading } = useProducts<IProduct>(
   //   `/products/${router.query.slug}`
   // );
+
+  const onSelectedSize = (size: ISize) => {
+    setTempCartProduct((currentProduct) => ({
+      ...currentProduct,
+      size,
+    }));
+  };
+
+  const onUpdatedQuantity = (quantity: number) => {
+    setTempCartProduct((currentProduct) => ({
+      ...currentProduct,
+      quantity,
+    }));
+  };
+
+  const onAddProduct = () => {
+    if (!tempCartProduct.size) {
+      return;
+    }
+
+    //? Llamar la accion del context para agregar al carrito
+    addProductToCart(tempCartProduct);
+    router.push("/cart");
+  };
 
   return (
     <ShopLayout title={product.title} pageDescription={product.description}>
@@ -31,7 +70,7 @@ const ProductPage: NextPage<Props> = ({ product }) => {
 
         <Grid item xs={12} sm={5}>
           <Box display="flex" flexDirection="column">
-            {/*titulod */}
+            {/*titulo */}
             <Typography variant="h1" component="h1">
               {product.title}
             </Typography>
@@ -40,17 +79,37 @@ const ProductPage: NextPage<Props> = ({ product }) => {
             </Typography>
             <Box sx={{ my: 2 }}>
               <Typography variant="subtitle2">Cantidad</Typography>
-              <ItemCounter />
+              <ItemCounter
+                currentValue={tempCartProduct.quantity}
+                updatedQuantity={onUpdatedQuantity}
+                maxValue={product.inStock > 5 ? 5 : product.inStock}
+              />
               <SizeSelector
                 //selectedSize={product.sizes[2]}
                 sizes={product.sizes}
+                selectedSize={tempCartProduct.size}
+                onSelectedSize={onSelectedSize}
               />
             </Box>
             {/* Agregar al carrito*/}
-            <Button color="secondary" className="circular-btn">
-              Agregar al carrito
-            </Button>
-            {/* <Chip label="No hay disponibles" color="error" variant="outlined" /> */}
+            {product.inStock > 0 ? (
+              <Button
+                color="secondary"
+                className="circular-btn"
+                onClick={onAddProduct}
+              >
+                {tempCartProduct.size
+                  ? "Agregar al carrito"
+                  : "Seleccione una talla"}
+              </Button>
+            ) : (
+              <Chip
+                label="No hay disponibles"
+                color="error"
+                variant="outlined"
+              />
+            )}
+
             <Box sx={{ mt: 3 }}>
               <Typography variant="subtitle2">Description</Typography>
               <Typography variant="body2">{product.description}</Typography>
