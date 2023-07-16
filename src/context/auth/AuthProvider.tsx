@@ -27,9 +27,13 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   }, []);
 
   const checkToken = async () => {
+    if (!Cookies.get("token")) {
+      return;
+    }
+
     try {
       //*LLama endpoint
-      const { data } = await tesloApi.post("/user/token");
+      const { data } = await tesloApi.get("/user/token");
 
       //*Revalidar token guardado  el nuevo
       const { token, user } = data;

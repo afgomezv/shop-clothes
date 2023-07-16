@@ -1,10 +1,9 @@
-import { FC, useEffect, useReducer } from "react";
+import { FC, useEffect, useReducer, useRef } from "react";
 import Cookie from "js-cookie";
 
 import { ICartProduct } from "@/interfaces";
 import { CartContext, cartReducer } from "./";
-import { type } from "os";
-import { OrderSummary } from "../../components/cart/OrderSummary";
+import { cookies } from "next/dist/client/components/headers";
 
 export interface CartState {
   cart: ICartProduct[];
@@ -29,22 +28,29 @@ interface Props {
 export const CartProvider: FC<Props> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, CART_INITIAL_STATE);
 
-  //*Efecto
-  useEffect(() => {
+  const firstTimeLoad = useRef(true);
+
+  const loadCookies = async () => {
     try {
       const cookieProducts = Cookie.get("cart")
         ? JSON.parse(Cookie.get("cart")!)
         : [];
-      dispatch({
+      await dispatch({
         type: "[cart] - LoadCart from cookies | storage",
         payload: cookieProducts,
       });
     } catch (error) {
-      dispatch({
+      await dispatch({
         type: "[cart] - LoadCart from cookies | storage",
         payload: [],
       });
+    } finally {
+      firstTimeLoad.current = false;
     }
+  };
+
+  useEffect(() => {
+    loadCookies();
   }, []);
 
   const updateCartQuantity = (product: ICartProduct) => {
@@ -55,7 +61,12 @@ export const CartProvider: FC<Props> = ({ children }) => {
     dispatch({ type: "[cart] - Remove product in cart", payload: product });
   };
 
+  //* Los productos se guardan en las cokkies
   useEffect(() => {
+    if (firstTimeLoad.current) {
+      return;
+    }
+
     Cookie.set("cart", JSON.stringify(state.cart));
   }, [state.cart]);
 
