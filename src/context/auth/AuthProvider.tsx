@@ -1,4 +1,5 @@
 import { FC, useEffect, useReducer } from "react";
+import { useRouter } from "next/router";
 import { IUser } from "@/interfaces";
 import { AuthContext, authReducer } from "./";
 import tesloApi from "@/api/tesloApi";
@@ -21,6 +22,7 @@ interface Props {
 
 export const AuthProvider: FC<Props> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, AUTH_INITIAL_STATE);
+  const router = useRouter();
 
   useEffect(() => {
     checkToken();
@@ -95,6 +97,12 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     }
   };
 
+  const logout = () => {
+    Cookies.remove("token");
+    Cookies.remove("cart");
+    router.reload();
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -103,6 +111,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         //*Methods
         loginUser,
         registerUser,
+        logout,
       }}
     >
       {children}
