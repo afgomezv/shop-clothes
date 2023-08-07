@@ -11,14 +11,23 @@ import {
   Link,
   Typography,
 } from "@mui/material";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { CartContext } from "@/context";
 import { countries } from "@/utils";
+import { useRouter } from "next/router";
+import { cookies } from "next/dist/client/components/headers";
+import Cookies from "js-cookie";
 
 const SummaryPage = () => {
   const { shippingAddress, numberOfItems } = useContext(CartContext);
+  const router = useRouter();
 
   //console.log(countries);
+  useEffect(() => {
+    if (!Cookies.get("firstName")) {
+      router.push("/checkout/address");
+    }
+  }, [router]);
 
   const {
     firstName,

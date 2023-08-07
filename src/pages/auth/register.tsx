@@ -1,7 +1,9 @@
 import { useContext, useState } from "react";
-import { AuthContext } from "@/context";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
+import { getSession, signIn } from "next-auth/react";
+import { GetServerSideProps } from "next";
+import { AuthContext } from "@/context";
 import { ErrorOutline } from "@mui/icons-material";
 import {
   Box,
@@ -15,7 +17,6 @@ import {
 import { AuthLayout } from "@/components/layouts";
 import { useForm } from "react-hook-form";
 import { validations } from "@/utils";
-import tesloApi from "@/api/tesloApi";
 
 type FormData = {
   name: string;
@@ -45,8 +46,9 @@ const RegisterPage = () => {
       return;
     }
     //Todo: navegar a la pantalla que el usuario estaba
-    const destination = router.query.p?.toString() || "/";
-    router.replace(destination);
+    // const destination = router.query.p?.toString() || "/";
+    // router.replace(destination);
+    await signIn("credentials", { email, password });
   };
 
   return (
@@ -135,6 +137,28 @@ const RegisterPage = () => {
       </form>
     </AuthLayout>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  query,
+}) => {
+  const session = await getSession({ req });
+
+  const { p = "/" } = query;
+
+  if (session) {
+    return {
+      redirect: {
+        destination: p.toString(),
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 };
 
 export default RegisterPage;
