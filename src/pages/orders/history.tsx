@@ -3,7 +3,12 @@ import { GetServerSideProps, NextPage } from "next";
 import { ShopLayout } from "@/components/layouts";
 import { Chip, Grid, Link, Typography } from "@mui/material";
 
-import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridValueGetterParams,
+  GridRenderCellParams,
+} from "@mui/x-data-grid";
 import { getSession } from "next-auth/react";
 import { dbOrders } from "@/database";
 import { IOrder } from "@/interfaces";
@@ -16,7 +21,7 @@ const columns: GridColDef[] = [
     headerName: "Pagada",
     description: "Muestra la informacion si está pagada la orden o no",
     width: 200,
-    renderCell: (params: GridValueGetterParams) => {
+    renderCell: (params: GridRenderCellParams) => {
       return params.row.paid ? (
         <Chip color="success" label="Paga" variant="outlined" />
       ) : (
@@ -30,7 +35,7 @@ const columns: GridColDef[] = [
     description: "Muestra la informacion si está pagada la orden o no",
     width: 200,
     sortable: false,
-    renderCell: (params: GridValueGetterParams) => {
+    renderCell: (params: GridRenderCellParams) => {
       return (
         <NextLink
           href={`/orders/${params.row.orderId}`}
