@@ -26,19 +26,30 @@ export const authOptions: NextAuthOptions = {
           placeholder: "Contraseña",
         },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         console.log({ credentials });
         //todo: validar contra base de datos
 
-        return await dbUsers.checkUserEmailPassword(
+        const user = await dbUsers.checkUserEmailPassword(
           credentials!.email,
           credentials!.password
         );
+        if (user) {
+          return {
+            id: user._id, //* Supongo que `_id` es el campo de identificación
+            email: user.email,
+            role: user.role,
+            name: user.name,
+          };
+        } else {
+          //* Si no se encuentra un usuario válido, devolver null
+          return null;
+        }
       },
     }),
     GithubProvider({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.CLIENT_SECRET,
+      clientId: process.env.GITHUB_ID ?? "",
+      clientSecret: process.env.CLIENT_SECRET ?? "",
     }),
     // ...add more providers here
   ],
